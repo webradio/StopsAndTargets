@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Trade-offs between tight and wide targets and stops</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    .collection {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .item {
+      flex: 1 0;
+      width: auto;
+      height: auto;
+    }
+    section, article {
+      margin-top: 1em;
+    }
+    .math {
+      font-style: italic;
+    }
+    .bid {
+      color: blue;
+    }
+    .ask {
+      color: red;
+    }
+    .license {
+      //margin-top: 1em;
+      font-size: xx-small;
+      padding: 1em 1em;
+      margin-right: 1em;
+      //box-shadow: 0 2px 4px 0;
+    }
+    @media screen { 
+      .license {
+        background-color: #f1f1f1;
+      }
+      .initially-hidden {
+        display: none;
+      }
+    }    .tbl {
+      border-collapse: collapse;
+      page-break-inside: avoid;
+      page-break-before:auto;
+    }
+    .tbl td,
+    .tbl th {
+      border-style: solid;
+      border-width: thin;
+      padding: 0.2em;
+    }
+    .tbl td {
+      font-family: monospace;
+    }
+    @media screen and (min-width: 45em) {
+      .prose {
+        -webkit-column-count: 2; /* Chrome, Safari, Opera */
+        -moz-column-count: 2; /* Firefox */
+        column-count: 2;
+        -webkit-column-gap: 2.5em; /* Chrome, Safari, Opera */
+        -moz-column-gap: 2.5em; /* Firefox */
+        column-gap: 2.5em;
+        //margin: 1.5em 2.5em;
+      }
+    }
+    @media screen and (min-width: 80em) {
+      .prose {
+        -webkit-column-count: 3; /* Chrome, Safari, Opera */
+        -moz-column-count: 3; /* Firefox */
+        column-count: 3;
+        -webkit-column-gap: 2.5em; /* Chrome, Safari, Opera */
+        -moz-column-gap: 2.5em; /* Firefox */
+        column-gap: 2.5em;
+        //margin: 1.5em 2.5em;
+      }
+    }
+</style>
+</head>
+<html>
+  <body>
+    <h1>Trade-offs between tight and wide targets and stops</h1>
+    <section class="prose">
+      <h2>Purpose</h2>
+
+      <p>I wanted to quantify and visualize depencencies of expectancy
+      (the average amount you can expect to win (or lose) per trade, when
+      a large number of trades are taken) from stop, traget and
+      spread & commissions. Written with currency pairs in mind but applies to other assets, too.</p>
+
+      <h2>Random Walk Example</h2>
+
+      <p>An example to get started:</p>
+      <ul>
+        <li>spread \(c = 1\) pip; commissions are zero</li>
+        <li>assume that <span class="ask">ask</span> = <span class="bid">bid</span> + <span class="math">c</span> always</li>
+        <li>a long position is opened and held until either stop or traget is hit</li>
+        <li>stop is hit when <span class="bid">bid</span> drops \(s = 20\) pips down;</li>
+        <li>target is hit when <span class="bid">bid</span> climbs \(t = 10\) pips up (and <span class="ask">ask</span> is then even higher, namely, \(c\) pips higher)</li>
+      </ul>
+      <p>Each win is then \(W = t - c = 9\) pips,
+        each loss \(L = s + c = 21\) pips.</p>
+
+      <p>If price is a random walk, then the loss probability is
+        \[l_{rw} = {t \over t+s} = {10 \over {10 + 20}} = {1 \over 3}\]
+      Win probability is \[w_{rw} = 1 - l_{rw} = {s \over {t + s}} = {2 \over 3}\]</p>
+
+      <p>The expectancy is 
+      \[E = W \cdot w_{rw} - L \cdot l_{rw} = 9 \cdot {2 \over 3} - 21 \cdot {1 \over 3} = -1 = -c\]
+      You loose one spread per trade, on average. This holds for any combination of stop and target.</p>
+
+      <h2>Introducing Edge</h2>
+
+      <p>Let's consider the edge \(x\) and call it a percentage (a fraction, strictly speaking) of loosing trades you are able to prevent. E.g., the edge \(x=0.1\) means that every tenth looser is prevented (by not opening the position). The loss probability becomes lower:
+        \[ l = (1-x) \cdot {t \over {t + s}} = {9 \over 10} \cdot {1 \over 3} = 0.3 \]
+       vs &frac13; before.
+      The expectancy becomes higher:
+       \[ 9 \cdot (1 - 0.3) - 21 \cdot 0.3 = 0 \]
+      i.e. break-even in this example.</p>
+
+      <h2>Play with it</h2>
+
+      <p>You can play with sliders for spread, stop and target in <a href="https://desmos.s3.amazonaws.com/Desmos_User_Guide.pdf">desmos graph calculator</a> and see what happens to expectancy, e.g. how considerably spread cuts into target and decreases the win when target is small. Click on the image below to get straight to the example.</p>
+
+      <p>Another (extereme) example: if target \(t = 2 \cdot c\) is only twice the spread (in this example, the <span class="bid">bid</span> needs to clibmb two pips, not the <span class="ask">ask</span>), then every second looser needs to be prevented by having an edge, just to become break-even. It gets worse when spread increases (slider "<span class="math">c</span>").</p>
+
+      <p><a href="https://www.desmos.com/calculator/pcvnx9lv8t"><img align="middle" width="100%" src="desmos.png"></a></p>
+
+      <p>The further the target (slider "<span class="math">t</span>", how many pips the <span class="bid">bid</span> needs to go up), the smaller fraction of loosers prevented is enough to become break-even (but the more difficult this becomes to achive: the further the target, the more likely the stop is hit first).</p>
+
+      <p>Nothing seemeingly happens on the graph when stop distance changes (slider "<span class="math">s</span>"). The same fraction of loosers prevented is needed to become break-even. However, the further the stop, the more seldom this prevention is required; On the other hand, when the stop is hit, the loss is bigger, too, and the equity curve will look differently (less smooth, the system scales up worse).</p>
+
+      <h2>Comments and Suggestions</h2>
+
+      <p>Appreciated via github issue tracker or futures.io.</p>
+    </section>
+    <section class="license">
+      Powered by HTML, CSS, JavaScript and a good text editor. I am neither collecting your <a href="https://xkcd.com/1998/">personal data</a> nor sharing it with anybody - I am busy programming. My hosting provider and MathJax provider can, of course, see and record your visit; I may count visitors per country from time to time using these records. Linked pages are out of my influence and I not neccessarily share opinions presented there.
+    </section>
+  </body>
+</html>
+
